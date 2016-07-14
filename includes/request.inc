@@ -176,7 +176,8 @@ function islandora_oai_add_error($code, $argument = '', $value = '') {
  *
  * Helper function for islandora_oai_add_error and islandora_oai_get_errors.
  * Basically faking a singleton with getter and setter methods.
- * OAI2 specification: http://www.openarchives.org/OAI/openarchivesprotocol.html
+ * OAI2 specification:
+ *    http://www.openarchives.org/OAI/openarchivesprotocol.html .
  *
  * @param string $code
  *   Error code to be added, or 'get' if we want to get the errors array.
@@ -461,7 +462,7 @@ function islandora_oai_identify(&$writer, $args) {
   $writer->writeElement('protocolVersion', '2.0');
   $writer->writeElement('adminEmail', variable_get('islandora_oai_admin_email', 'N/A'));
   $writer->writeElement('earliestDatestamp', $earliest_datestamp);
-  $writer->writeElement('deletedRecord', 'no');
+  $writer->writeElement('deletedRecord', variable_get('islandora_oai_repository_deletedrecords', 'no'));
   $writer->writeElement('granularity', 'YYYY-MM-DDThh:mm:ssZ');
   $writer->writeElement('compression', 'yes');
 
@@ -517,7 +518,7 @@ EOQ;
  * @param object $writer
  *   The XMLWriter object being passed by reference for constructing our output.
  * @param array $args
- *   Arguments of the POST or GET Request
+ *   Arguments of the POST or GET Request.
  * @param bool $list_rec
  *   List identifiers if FALSE, records if TRUE.
  *
@@ -745,12 +746,19 @@ function islandora_oai_build_record_response(&$writer, $record, $full_record = F
   $repo_id = variable_get('islandora_oai_repository_identifier', 'drupal-site.org');
   $date = new DateTime((string) $record['date'], new DateTimeZone('UTC'));
   $date_stamp = $date->format("Y-m-d\TH:i:s\Z");
-
+  $tombstone = isset($record['tombstone']) && $record['tombstone'] ? TRUE : FALSE;
   if ($full_record) {
     $writer->startElement('record');
   }
 
   $writer->startElement('header');
+
+  // If record contains a tombstone key with a value that evaluates to true
+  // mark status as deleted.
+  if ($tombstone) {
+    $writer->writeAttribute('status', 'deleted');
+  }
+
   $writer->writeElement('identifier', 'oai:' . $repo_id . ':' . $identifier);
   $writer->writeElement('datestamp', $date_stamp);
 
@@ -777,6 +785,7 @@ function islandora_oai_build_record_response(&$writer, $record, $full_record = F
     $oai_output = call_user_func($record_xml['function'], array(
       'metadata_prefix' => $metadata_prefix,
       'pid' => $record['pid'],
+      'tombstone' => $tombstone,
     ));
     if (!empty($oai_output)) {
       $writer->startElement('metadata');
@@ -944,7 +953,6 @@ EOQ;
  *
  * @param object $writer
  *   The XMLWriter object being passed by reference for constructing our output.
- *
  * @param array $args
  *   Arguments of the $_POST or the $_GET request.
  *

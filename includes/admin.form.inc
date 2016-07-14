@@ -51,6 +51,20 @@ function islandora_oai_admin_form($form, $form_state) {
     '#default_value' => variable_get('islandora_oai_repository_identifier', 'drupal-site.org'),
     '#description' => t('The identifier for this repository, e.g. oai:<strong>drupal-site.org</strong>:123.'),
   );
+  // This variable should be re-set by other OAI-PMH handlers if
+  // the deleted records capability is implemented correctly.
+  $form['islandora_oai_configuration']['islandora_oai_repository_deletedrecords'] = array(
+    '#type' => 'select',
+    '#title' => t('Deleted records handling'),
+    '#required' => TRUE,
+    '#options' => array(
+      'no' => 'no',
+      'transient' => 'transient',
+      'persistent' => 'persistent',
+    ),
+    '#default_value' => variable_get('islandora_oai_repository_deletedrecords', 'no'),
+    '#description' => t('OAI-PMH Service handling of deleted records. The default handler does not provide this capability, but contributed ones could provide a way of registering deleted objects and publicising which method was used to do so.'),
+  );
   $form['islandora_oai_configuration']['islandora_oai_admin_email'] = array(
     '#type' => 'textfield',
     '#title' => t('Administrator Email'),
@@ -98,7 +112,7 @@ function islandora_oai_admin_form($form, $form_state) {
       );
       $form['islandora_oai_configuration']['handlers']['configuration'][$name] = array(
         '#type' => 'item',
-        '#markup' => (isset($profile['configuration']) AND $profile['configuration'] != '') ? l(t('configure'), $profile['configuration']) : '',
+        '#markup' => (isset($profile['configuration']) and $profile['configuration'] != '') ? l(t('configure'), $profile['configuration']) : '',
       );
     }
     $form['islandora_oai_configuration']['handlers']['default'] = array(
@@ -131,6 +145,7 @@ function islandora_oai_admin_form_submit($form, $form_state) {
   variable_set('islandora_oai_repository_name', $form_state['values']['islandora_oai_configuration']['islandora_oai_repository_name']);
   variable_set('islandora_oai_path', $form_state['values']['islandora_oai_configuration']['islandora_oai_path']);
   variable_set('islandora_oai_repository_identifier', $form_state['values']['islandora_oai_configuration']['islandora_oai_repository_identifier']);
+  variable_set('islandora_oai_repository_deletedrecords', $form_state['values']['islandora_oai_configuration']['islandora_oai_repository_deletedrecords']);
   variable_set('islandora_oai_admin_email', $form_state['values']['islandora_oai_configuration']['islandora_oai_admin_email']);
   variable_set('islandora_oai_max_size', $form_state['values']['islandora_oai_configuration']['islandora_oai_max_size']);
   variable_set('islandora_oai_expire_time', $form_state['values']['islandora_oai_configuration']['islandora_oai_expire_time']);
