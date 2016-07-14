@@ -63,7 +63,7 @@ function islandora_oai_admin_form($form, $form_state) {
       'persistent' => 'persistent',
     ),
     '#default_value' => variable_get('islandora_oai_repository_deletedrecords', 'no'),
-    '#description' => t('OAI-PMH Service handling of deleted records. The default handler does not provide this capability, but contributed ones could provide a way of registering deleted objects and publicising which method was used to do so.'),
+    '#description' => t('OAI-PMH Service handling of deleted records. The default handler does not provide this capability, but contributed ones could provide a way of registering deleted objects and publicising which policy is used for keeping those.'),
   );
   $form['islandora_oai_configuration']['islandora_oai_admin_email'] = array(
     '#type' => 'textfield',
